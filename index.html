@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Dots & Boxes - Ultimate Strategy Game</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Play Dots & Boxes! A highly polished, responsive 2-player grid game against friends or an intelligent AI. Choose themes, grid sizes, and track scores.">
+  <meta name="theme-color" content="#0d0e15">
+  
+  <!-- Apple Web App Meta -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Dots">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="shortcut icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-cyberpunk">
+  <div class="app-background">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+  </div>
+
+  <main class="app-container">
+    
+    <!-- 1. SETUP SCREEN -->
+    <section id="screen-setup" class="screen active">
+      <header class="app-header">
+        <h1 class="game-logo">DOTS<span>&</span>BOXES</h1>
+        <p class="game-tagline">Connect lines, capture boxes, outsmart your opponent.</p>
+      </header>
+
+      <div class="glass-card setup-card">
+        <!-- Game Mode Selection -->
+        <div class="form-group">
+          <label class="section-label">Game Mode</label>
+          <div class="mode-toggle-container">
+            <button type="button" id="btn-mode-ai" class="mode-btn active" data-mode="ai">
+              <span class="icon">🤖</span> vs Computer
+            </button>
+            <button type="button" id="btn-mode-local" class="mode-btn" data-mode="local">
+              <span class="icon">👥</span> vs Friend (Local)
+            </button>
+          </div>
+        </div>
+
+        <!-- Player Settings -->
+        <div class="players-settings">
+          <div class="form-group flex-col">
+            <label for="p1-name" class="input-label">Player 1 Name</label>
+            <div class="input-wrapper">
+              <input type="text" id="p1-name" value="Player 1" maxlength="12" placeholder="Enter name">
+              <span class="initial-preview" id="p1-initial-preview">P</span>
+            </div>
+          </div>
+
+          <div class="form-group flex-col" id="p2-settings-group">
+            <label for="p2-name" class="input-label" id="p2-name-label">Computer</label>
+            <div class="input-wrapper">
+              <input type="text" id="p2-name" value="Computer" maxlength="12" placeholder="Enter name">
+              <span class="initial-preview opponent" id="p2-initial-preview">C</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Difficulty (visible only in AI mode) -->
+        <div class="form-group" id="difficulty-group">
+          <label class="section-label">AI Difficulty</label>
+          <div class="difficulty-toggle-container">
+            <button type="button" class="diff-btn" data-diff="easy">Easy</button>
+            <button type="button" class="diff-btn active" data-diff="medium">Medium</button>
+            <button type="button" class="diff-btn" data-diff="hard">Hard</button>
+          </div>
+        </div>
+
+        <!-- Grid Size Selection -->
+        <div class="form-group">
+          <label class="section-label">Grid Dimensions</label>
+          
+          <div class="label-with-value">
+            <span class="input-label" style="font-weight: 600;">Rows (Height)</span>
+            <span class="badge" id="grid-rows-display">5 Rows</span>
+          </div>
+          <div class="range-container">
+            <span class="range-limit">2</span>
+            <input type="range" id="grid-rows-slider" min="2" max="24" value="5" step="1">
+            <span class="range-limit">24</span>
+          </div>
+
+          <div class="label-with-value" style="margin-top: 6px;">
+            <span class="input-label" style="font-weight: 600;">Columns (Width)</span>
+            <span class="badge" id="grid-cols-display">5 Columns</span>
+          </div>
+          <div class="range-container">
+            <span class="range-limit">2</span>
+            <input type="range" id="grid-cols-slider" min="2" max="24" value="5" step="1">
+            <span class="range-limit">24</span>
+          </div>
+          
+          <p class="input-hint" id="grid-dimensions-hint">A 5×5 grid contains 25 squares and requires 36 dots.</p>
+        </div>
+
+        <!-- Theme Selection -->
+        <div class="form-group">
+          <label class="section-label">Theme</label>
+          <div class="theme-picker">
+            <button type="button" class="theme-btn active" data-theme="cyberpunk" style="--theme-color: #00f0ff;" title="Cyberpunk Neon"></button>
+            <button type="button" class="theme-btn" data-theme="emerald" style="--theme-color: #10b981;" title="Emerald Glow"></button>
+            <button type="button" class="theme-btn" data-theme="sunset" style="--theme-color: #f97316;" title="Sunset Flare"></button>
+            <button type="button" class="theme-btn" data-theme="dream" style="--theme-color: #a855f7;" title="Pastel Dream"></button>
+          </div>
+        </div>
+
+        <!-- Appearance Mode -->
+        <div class="form-group">
+          <label class="section-label">Appearance</label>
+          <button type="button" id="btn-appearance-toggle" class="mode-btn active" style="width: 100%;">
+            🌙 Dark Mode
+          </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <button id="btn-start" class="btn btn-primary btn-glow">
+          START MATCH <span class="arrow">→</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. GAME BOARD SCREEN -->
+    <section id="screen-game" class="screen">
+      <header class="game-header">
+        <button id="btn-game-back" class="btn btn-icon" title="Back to Main Menu">
+          ← Menu
+        </button>
+        <div class="game-title-container">
+          <h2 class="game-heading">DOTS & BOXES</h2>
+          <span class="badge difficulty-badge" id="game-difficulty-badge">Medium AI</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-game-theme-toggle" class="btn btn-icon" title="Toggle Appearance">
+            🌙
+          </button>
+          <button id="btn-game-sound" class="btn btn-icon" title="Toggle Sound">
+            🔊
+          </button>
+        </div>
+      </header>
+
+      <!-- Scoreboard Card -->
+      <div class="glass-card scoreboard-card">
+        <div class="score-player active" id="score-p1-card">
+          <div class="player-avatar" id="p1-avatar-bg">
+            <span id="p1-avatar-text">P</span>
+          </div>
+          <div class="player-meta">
+            <span class="player-name-text" id="game-p1-name">Player 1</span>
+            <span class="score-number" id="game-p1-score">0</span>
+          </div>
+        </div>
+
+        <div class="versus-divider">VS</div>
+
+        <div class="score-player" id="score-p2-card">
+          <div class="player-avatar opponent" id="p2-avatar-bg">
+            <span id="p2-avatar-text">C</span>
+          </div>
+          <div class="player-meta">
+            <span class="player-name-text" id="game-p2-name">Computer</span>
+            <span class="score-number" id="game-p2-score">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Turn & Progress Indicator -->
+      <div class="status-panel">
+        <div id="turn-banner" class="turn-banner">
+          <span class="spinner" id="turn-spinner"></span>
+          <span id="turn-text">Player 1's Turn</span>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar-labels">
+            <span class="progress-label" id="progress-p1-label">P1: 0%</span>
+            <span class="win-marker-label">Win Threshold: <span id="win-threshold-num">13</span></span>
+            <span class="progress-label font-right" id="progress-p2-label">Comp: 0%</span>
+          </div>
+          <div class="progress-track">
+            <div id="progress-fill-p1" class="progress-fill p1-fill" style="width: 0%"></div>
+            <div id="progress-fill-p2" class="progress-fill p2-fill" style="width: 0%"></div>
+            <div class="win-threshold-line" title="Threshold to win (>50%)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Board container -->
+      <div class="board-outer-container">
+        <div id="game-board" class="board-grid">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- In-Game Controls -->
+      <footer class="game-controls">
+        <button id="btn-game-restart" class="btn btn-secondary">
+          ♻ Restart
+        </button>
+      </footer>
+    </section>
+
+    <!-- 3. GAME OVER OVERLAY -->
+    <section id="screen-gameover" class="screen-overlay">
+      <div class="glass-card gameover-card scale-in">
+        <div class="trophy-container">🏆</div>
+        <h2 class="gameover-title">MATCH FINISHED!</h2>
+        <h3 id="winner-announcement" class="winner-announcement">Player 1 Wins!</h3>
+        <p id="winner-subtext" class="winner-subtext">Dominating with 15 out of 25 squares.</p>
+
+        <!-- Stats breakdown -->
+        <div class="stats-table">
+          <div class="stat-row">
+            <span class="stat-name" id="stats-p1-name">Player 1</span>
+            <span class="stat-value" id="stats-p1-result">15 Squares (60%)</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name" id="stats-p2-name">Computer</span>
+            <span class="stat-value" id="stats-p2-result">10 Squares (40%)</span>
+          </div>
+        </div>
+
+        <div class="gameover-buttons">
+          <button id="btn-gameover-replay" class="btn btn-primary">
+            PLAY AGAIN
+          </button>
+          <button id="btn-gameover-menu" class="btn btn-secondary">
+            MAIN MENU
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Service Worker Registration Setup -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registered successfully.', reg.scope))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+
+  <!-- Core Javascript files -->
+  <script src="game.js"></script>
+  <script src="ai.js"></script>
+</body>
+</html>
