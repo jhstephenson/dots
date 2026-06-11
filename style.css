@@ -1191,3 +1191,63 @@ body:not(.turn-computer) .board-line:not(.taken):hover::after {
     flex-direction: column;
   }
 }
+
+/* ==========================================================================
+   AUTHENTICATION STYLES (Firebase Login/Signup)
+   ========================================================================== */
+.auth-card {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+#auth-form input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+#auth-form input:focus {
+  outline: none;
+  border-color: var(--color-p1);
+  box-shadow: 0 0 12px var(--color-p1-glow);
+}
+
+.mode-light #auth-form input {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: var(--text-primary);
+}
+
+.mode-light #auth-form input:focus {
+  border-color: var(--color-p1);
+  box-shadow: 0 0 12px var(--color-p1-glow);
+}
+
+#btn-auth-google {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  transition: all var(--transition-fast);
+}
+
+#btn-auth-google:hover {
+  background: #f8fafc !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
+  transform: translateY(-1px);
+}
+
+.mode-light #btn-auth-google {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.mode-light #btn-auth-google:hover {
+  background: #f1f5f9 !important;
+}

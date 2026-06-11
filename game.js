@@ -90,6 +90,7 @@ const AudioSynth = {
     });
   }
 };
+window.AudioSynth = AudioSynth;
 
 // --- DOM ELEMENTS ---
 const elements = {
@@ -298,6 +299,7 @@ function updateInitialPreview(player) {
     elements.p2InitialPreview.textContent = initial;
   }
 }
+window.updateInitialPreview = updateInitialPreview;
 
 function getInitial(name, fallback) {
   if (!name) return fallback;
