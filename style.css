@@ -1251,3 +1251,114 @@ body:not(.turn-computer) .board-line:not(.taken):hover::after {
 .mode-light #btn-auth-google:hover {
   background: #f1f5f9 !important;
 }
+
+/* ==========================================================================
+   MINI STATISTICS CARD STYLES
+   ========================================================================== */
+.stats-mini-card {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  transition: all var(--transition-normal);
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.stats-badge {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.stats-badge.synced {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #10b981;
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.stat-val {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-val.won {
+  color: var(--color-p1);
+  text-shadow: 0 0 8px var(--color-p1-glow);
+}
+
+.stat-val.lost {
+  color: var(--color-p2);
+  text-shadow: 0 0 8px var(--color-p2-glow);
+}
+
+/* Light mode overrides */
+.mode-light .stats-mini-card {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+}
+
+.mode-light .stats-badge {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.08);
+  color: var(--text-muted);
+}
+
+.mode-light .stats-badge.synced {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #059669;
+  text-shadow: none;
+}
+
+.mode-light .stat-val.won {
+  text-shadow: none;
+}
+
+.mode-light .stat-val.lost {
+  text-shadow: none;
+}
+

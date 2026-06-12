@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dots-boxes-v1';
+const CACHE_NAME = 'dots-boxes-v2';
 const ASSETS = [
   './',
   './index.html',

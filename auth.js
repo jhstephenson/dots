@@ -16,10 +16,19 @@ const firebaseConfig = {
 // Initialize Firebase compat
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+const db = firebase.firestore();
 
 // --- STATE MANAGEMENT ---
 let authMode = 'login'; // 'login' or 'register'
 let isGuestMode = false;
+
+// Statistics State
+let statsState = {
+  gamesPlayed: 0,
+  wins: 0,
+  losses: 0,
+  ties: 0
+};
 
 // --- DOM ELEMENTS ---
 const authElements = {
@@ -37,7 +46,12 @@ const authElements = {
   googleBtn: document.getElementById('btn-auth-google'),
   guestBtn: document.getElementById('btn-auth-guest'),
   signOutLink: document.getElementById('link-p1-signout'),
-  p1NameField: document.getElementById('p1-name')
+  p1NameField: document.getElementById('p1-name'),
+  statPlayed: document.getElementById('stat-played'),
+  statWon: document.getElementById('stat-won'),
+  statLost: document.getElementById('stat-lost'),
+  statRatio: document.getElementById('stat-ratio'),
+  statsSyncBadge: document.getElementById('stats-sync-badge')
 };
 
 // --- INITIALIZE AUTH UI & BINDINGS ---
@@ -163,6 +177,9 @@ function monitorAuthState() {
       authElements.p1NameField.readOnly = true;
       authElements.signOutLink.style.display = 'inline-block';
       
+      // Load cloud stats
+      loadCloudStats(user.uid);
+      
       // Update local preview initial (trigger mock input event)
       if (typeof window.updateInitialPreview === 'function') {
         window.updateInitialPreview('p1');
@@ -174,12 +191,17 @@ function monitorAuthState() {
         authElements.p1NameField.value = 'Player 1';
         authElements.p1NameField.readOnly = false;
         authElements.signOutLink.style.display = 'none';
+        
+        loadLocalStats();
       } else {
         // Force login screen
         authElements.screenAuth.classList.add('active');
         authElements.p1NameField.value = 'Player 1';
         authElements.p1NameField.readOnly = false;
         authElements.signOutLink.style.display = 'none';
+        
+        resetStatsState();
+        updateStatsUI(false);
       }
       
       if (typeof window.updateInitialPreview === 'function') {
@@ -196,6 +218,8 @@ function enterGuestMode() {
   authElements.p1NameField.readOnly = false;
   authElements.signOutLink.style.display = 'none';
   
+  loadLocalStats();
+  
   if (typeof window.updateInitialPreview === 'function') {
     window.updateInitialPreview('p1');
   }
@@ -210,8 +234,158 @@ function signOutUser() {
       authElements.emailInput.value = '';
       authElements.passwordInput.value = '';
       authElements.nameInput.value = '';
+      
+      resetStatsState();
+      updateStatsUI(false);
     });
 }
+
+// --- STATISTICS MANAGEMENT ---
+const GUEST_STATS_KEY = 'dots_guest_stats';
+
+function loadLocalStats() {
+  const localData = localStorage.getItem(GUEST_STATS_KEY);
+  if (localData) {
+    try {
+      statsState = JSON.parse(localData);
+    } catch (e) {
+      console.error("Failed to parse guest stats, resetting", e);
+      resetStatsState();
+    }
+  } else {
+    resetStatsState();
+  }
+  updateStatsUI(false);
+}
+
+function resetStatsState() {
+  statsState = {
+    gamesPlayed: 0,
+    wins: 0,
+    losses: 0,
+    ties: 0
+  };
+}
+
+function loadCloudStats(userId) {
+  return db.collection('users').doc(userId).get()
+    .then(doc => {
+      if (doc.exists && doc.data().stats) {
+        statsState = doc.data().stats;
+      } else {
+        // Create initial stats document if it doesn't exist
+        resetStatsState();
+        return db.collection('users').doc(userId).set({
+          stats: statsState,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).then(() => statsState);
+      }
+      return statsState;
+    })
+    .then(stats => {
+      updateStatsUI(true);
+      // Check if we have guest stats to sync/merge
+      syncGuestStats(userId);
+    })
+    .catch(err => {
+      console.warn("Error loading cloud stats, falling back to local guest stats:", err);
+      loadLocalStats();
+    });
+}
+
+function syncGuestStats(userId) {
+  const localData = localStorage.getItem(GUEST_STATS_KEY);
+  if (!localData) return;
+  
+  try {
+    const guestStats = JSON.parse(localData);
+    if (guestStats.gamesPlayed > 0) {
+      // Merge guest stats into cloud stats
+      statsState.gamesPlayed += guestStats.gamesPlayed;
+      statsState.wins += guestStats.wins;
+      statsState.losses += guestStats.losses;
+      statsState.ties += guestStats.ties;
+      
+      // Update Cloud Firestore
+      db.collection('users').doc(userId).set({
+        stats: statsState,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true })
+      .then(() => {
+        // Clear local guest stats after successful merge
+        localStorage.removeItem(GUEST_STATS_KEY);
+        updateStatsUI(true);
+        console.log("Guest statistics successfully merged and synced to cloud.");
+      })
+      .catch(err => {
+        console.error("Failed to merge guest stats to cloud:", err);
+      });
+    } else {
+      localStorage.removeItem(GUEST_STATS_KEY);
+    }
+  } catch (e) {
+    console.error("Error merging guest stats:", e);
+    localStorage.removeItem(GUEST_STATS_KEY);
+  }
+}
+
+function updateStatsUI(isSynced) {
+  if (authElements.statPlayed) authElements.statPlayed.textContent = statsState.gamesPlayed || 0;
+  if (authElements.statWon) authElements.statWon.textContent = statsState.wins || 0;
+  if (authElements.statLost) authElements.statLost.textContent = statsState.losses || 0;
+  
+  let winRate = 0;
+  if (statsState.gamesPlayed > 0) {
+    winRate = Math.round((statsState.wins / statsState.gamesPlayed) * 100);
+  }
+  if (authElements.statRatio) authElements.statRatio.textContent = `${winRate}%`;
+  
+  if (authElements.statsSyncBadge) {
+    if (isSynced) {
+      authElements.statsSyncBadge.textContent = 'Cloud Synced';
+      authElements.statsSyncBadge.classList.add('synced');
+    } else {
+      authElements.statsSyncBadge.textContent = 'Local Only';
+      authElements.statsSyncBadge.classList.remove('synced');
+    }
+  }
+}
+
+// Function called from game.js to record the result of a match
+window.recordMatchOutcome = function(outcome) {
+  statsState.gamesPlayed++;
+  
+  if (outcome.winner === 'tie') {
+    statsState.ties++;
+  } else if (outcome.winner === 1) {
+    statsState.wins++;
+  } else {
+    statsState.losses++;
+  }
+  
+  const currentUser = auth.currentUser;
+  if (currentUser && !isGuestMode) {
+    // Save to Firestore
+    db.collection('users').doc(currentUser.uid).set({
+      stats: statsState,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true })
+    .then(() => {
+      updateStatsUI(true);
+    })
+    .catch(err => {
+      console.error("Error saving match outcome to Firestore:", err);
+      // fallback save local
+      localStorage.setItem(GUEST_STATS_KEY, JSON.stringify(statsState));
+      updateStatsUI(false);
+    });
+  } else {
+    // Save to localStorage
+    localStorage.setItem(GUEST_STATS_KEY, JSON.stringify(statsState));
+    updateStatsUI(false);
+  }
+};
+
 
 // --- UTILITY METHODS ---
 function showError(msg) {

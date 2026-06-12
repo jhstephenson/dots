@@ -30,6 +30,7 @@
   <!-- Firebase SDKs (Compat v10) -->
   <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="theme-cyberpunk">
   <div class="app-background">
@@ -80,7 +81,7 @@
           </div>
           
           <button type="submit" id="btn-auth-submit" class="btn btn-primary btn-glow" style="width: 100%; margin-top: 6px; padding: 12px 24px;">
-            SIGN IN
+             SIGN IN
           </button>
         </form>
         
@@ -148,6 +149,32 @@
             <div class="input-wrapper">
               <input type="text" id="p2-name" value="Computer" maxlength="12" placeholder="Enter name">
               <span class="initial-preview opponent" id="p2-initial-preview">C</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Player Stats Dashboard -->
+        <div id="p1-stats-container" class="stats-mini-card">
+          <div class="stats-header">
+            <span>📊 PROFILE STATISTICS</span>
+            <span id="stats-sync-badge" class="stats-badge">Local Only</span>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-label">Played</span>
+              <span id="stat-played" class="stat-val">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Won</span>
+              <span id="stat-won" class="stat-val won">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Lost</span>
+              <span id="stat-lost" class="stat-val lost">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Win Rate</span>
+              <span id="stat-ratio" class="stat-val">0%</span>
             </div>
           </div>
         </div>

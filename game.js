@@ -786,6 +786,13 @@ function endGame() {
   elements.winnerAnnouncement.textContent = title;
   elements.winnerSubtext.textContent = sub;
   
+  if (typeof window.recordMatchOutcome === 'function') {
+    window.recordMatchOutcome({
+      winner: isTie ? 'tie' : (player1Wins ? 1 : 2),
+      mode: state.gameMode
+    });
+  }
+  
   setTimeout(() => {
     elements.screenGameOver.classList.add('active');
   }, 1000);
