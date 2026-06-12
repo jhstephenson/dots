@@ -268,14 +268,33 @@ function resetStatsState() {
 }
 
 function loadCloudStats(userId) {
+  // 1. Instantly load from local user cache as fallback/instant load
+  const cachedData = localStorage.getItem('dots_user_stats_' + userId);
+  if (cachedData) {
+    try {
+      statsState = JSON.parse(cachedData);
+      updateStatsUI(true);
+    } catch (e) {
+      console.warn("Failed to parse cached user stats:", e);
+    }
+  }
+
+  // 2. Fetch from Firestore
   try {
     return db.collection('users').doc(userId).get()
       .then(doc => {
         if (doc.exists && doc.data().stats) {
           statsState = doc.data().stats;
+          // Update local cache
+          localStorage.setItem('dots_user_stats_' + userId, JSON.stringify(statsState));
+          updateStatsUI(true);
         } else {
-          // Create initial stats document if it doesn't exist
-          resetStatsState();
+          // If document doesn't exist, we don't overwrite local cache if it already has games played
+          if (!cachedData) {
+            resetStatsState();
+            localStorage.setItem('dots_user_stats_' + userId, JSON.stringify(statsState));
+          }
+          // Initialize document in Firestore
           return db.collection('users').doc(userId).set({
             stats: statsState,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -285,16 +304,21 @@ function loadCloudStats(userId) {
       })
       .then(stats => {
         updateStatsUI(true);
-        // Check if we have guest stats to sync/merge
+        // Sync guest stats if there are any
         syncGuestStats(userId);
       })
       .catch(err => {
-        console.warn("Error loading cloud stats, falling back to local guest stats:", err);
-        loadLocalStats();
+        console.warn("Error loading cloud stats, using local cache:", err);
+        // If we don't have local cache for this user, fall back to guest stats
+        if (!cachedData) {
+          loadLocalStats();
+        }
       });
   } catch (err) {
     console.error("Synchronous error loading cloud stats:", err);
-    loadLocalStats();
+    if (!cachedData) {
+      loadLocalStats();
+    }
   }
 }
 
@@ -319,6 +343,8 @@ function syncGuestStats(userId) {
       .then(() => {
         // Clear local guest stats after successful merge
         localStorage.removeItem(GUEST_STATS_KEY);
+        // Update local user cache
+        localStorage.setItem('dots_user_stats_' + userId, JSON.stringify(statsState));
         updateStatsUI(true);
         console.log("Guest statistics successfully merged and synced to cloud.");
       })
@@ -370,28 +396,25 @@ window.recordMatchOutcome = function(outcome) {
   
   const currentUser = auth.currentUser;
   if (currentUser && !isGuestMode) {
-    // Save to Firestore
+    // 1. Instantly write to local user cache and update UI
+    const cacheKey = 'dots_user_stats_' + currentUser.uid;
+    localStorage.setItem(cacheKey, JSON.stringify(statsState));
+    updateStatsUI(true);
+    
+    // 2. Write to Firestore in the background
     try {
       db.collection('users').doc(currentUser.uid).set({
         stats: statsState,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true })
-      .then(() => {
-        updateStatsUI(true);
-      })
       .catch(err => {
-        console.error("Error saving match outcome to Firestore:", err);
-        // fallback save local
-        localStorage.setItem(GUEST_STATS_KEY, JSON.stringify(statsState));
-        updateStatsUI(false);
+        console.error("Background error saving match outcome to Firestore:", err);
       });
     } catch (err) {
-      console.error("Synchronous error saving to Firestore, falling back to local:", err);
-      localStorage.setItem(GUEST_STATS_KEY, JSON.stringify(statsState));
-      updateStatsUI(false);
+      console.error("Background synchronous error saving to Firestore:", err);
     }
   } else {
-    // Save to localStorage
+    // Save to guest localStorage
     try {
       localStorage.setItem(GUEST_STATS_KEY, JSON.stringify(statsState));
       updateStatsUI(false);
