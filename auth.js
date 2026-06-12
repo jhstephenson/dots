@@ -268,29 +268,34 @@ function resetStatsState() {
 }
 
 function loadCloudStats(userId) {
-  return db.collection('users').doc(userId).get()
-    .then(doc => {
-      if (doc.exists && doc.data().stats) {
-        statsState = doc.data().stats;
-      } else {
-        // Create initial stats document if it doesn't exist
-        resetStatsState();
-        return db.collection('users').doc(userId).set({
-          stats: statsState,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).then(() => statsState);
-      }
-      return statsState;
-    })
-    .then(stats => {
-      updateStatsUI(true);
-      // Check if we have guest stats to sync/merge
-      syncGuestStats(userId);
-    })
-    .catch(err => {
-      console.warn("Error loading cloud stats, falling back to local guest stats:", err);
-      loadLocalStats();
-    });
+  try {
+    return db.collection('users').doc(userId).get()
+      .then(doc => {
+        if (doc.exists && doc.data().stats) {
+          statsState = doc.data().stats;
+        } else {
+          // Create initial stats document if it doesn't exist
+          resetStatsState();
+          return db.collection('users').doc(userId).set({
+            stats: statsState,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).then(() => statsState);
+        }
+        return statsState;
+      })
+      .then(stats => {
+        updateStatsUI(true);
+        // Check if we have guest stats to sync/merge
+        syncGuestStats(userId);
+      })
+      .catch(err => {
+        console.warn("Error loading cloud stats, falling back to local guest stats:", err);
+        loadLocalStats();
+      });
+  } catch (err) {
+    console.error("Synchronous error loading cloud stats:", err);
+    loadLocalStats();
+  }
 }
 
 function syncGuestStats(userId) {
@@ -366,23 +371,33 @@ window.recordMatchOutcome = function(outcome) {
   const currentUser = auth.currentUser;
   if (currentUser && !isGuestMode) {
     // Save to Firestore
-    db.collection('users').doc(currentUser.uid).set({
-      stats: statsState,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true })
-    .then(() => {
-      updateStatsUI(true);
-    })
-    .catch(err => {
-      console.error("Error saving match outcome to Firestore:", err);
-      // fallback save local
+    try {
+      db.collection('users').doc(currentUser.uid).set({
+        stats: statsState,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true })
+      .then(() => {
+        updateStatsUI(true);
+      })
+      .catch(err => {
+        console.error("Error saving match outcome to Firestore:", err);
+        // fallback save local
+        localStorage.setItem(GUEST_STATS_KEY, JSON.stringify(statsState));
+        updateStatsUI(false);
+      });
+    } catch (err) {
+      console.error("Synchronous error saving to Firestore, falling back to local:", err);
       localStorage.setItem(GUEST_STATS_KEY, JSON.stringify(statsState));
       updateStatsUI(false);
-    });
+    }
   } else {
     // Save to localStorage
-    localStorage.setItem(GUEST_STATS_KEY, JSON.stringify(statsState));
-    updateStatsUI(false);
+    try {
+      localStorage.setItem(GUEST_STATS_KEY, JSON.stringify(statsState));
+      updateStatsUI(false);
+    } catch (err) {
+      console.error("Error saving local stats:", err);
+    }
   }
 };
 
