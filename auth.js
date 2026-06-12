@@ -361,15 +361,6 @@ function syncGuestStats(userId) {
 }
 
 function updateStatsUI(isSynced) {
-  console.log("[Stats Debug] updateStatsUI called. isSynced:", isSynced, "statsState:", JSON.stringify(statsState));
-  console.log("[Stats Debug] DOM elements:", {
-    statPlayed: authElements.statPlayed,
-    statWon: authElements.statWon,
-    statLost: authElements.statLost,
-    statRatio: authElements.statRatio,
-    statsSyncBadge: authElements.statsSyncBadge
-  });
-
   if (authElements.statPlayed) authElements.statPlayed.textContent = statsState.gamesPlayed || 0;
   if (authElements.statWon) authElements.statWon.textContent = statsState.wins || 0;
   if (authElements.statLost) authElements.statLost.textContent = statsState.losses || 0;
@@ -393,7 +384,6 @@ function updateStatsUI(isSynced) {
 
 // Function called from game.js to record the result of a match
 window.recordMatchOutcome = function(outcome) {
-  console.log("[Stats Debug] recordMatchOutcome called. outcome:", outcome);
   statsState.gamesPlayed++;
   
   if (outcome.winner === 'tie') {
@@ -404,14 +394,7 @@ window.recordMatchOutcome = function(outcome) {
     statsState.losses++;
   }
   
-  console.log("[Stats Debug] Updated statsState to save:", JSON.stringify(statsState));
-  
   const currentUser = auth.currentUser;
-  console.log("[Stats Debug] Current user state:", {
-    uid: currentUser ? currentUser.uid : null,
-    isGuestMode: isGuestMode
-  });
-
   if (currentUser && !isGuestMode) {
     // 1. Instantly write to local user cache and update UI
     const cacheKey = 'dots_user_stats_' + currentUser.uid;
